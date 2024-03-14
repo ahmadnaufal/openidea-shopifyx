@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:1323"
+    environment:
+      DB_NAME: "openidea-shopifyx"
+      DB_PORT: "5432"
+      DB_HOST: "localhost"
+      DB_USERNAME: "postgres"
+      DB_PASSWORD: "postgres"
+      APP_PORT: "8000"
+      PROMETHEUS_ADDRESS: ""
+      JWT_SECRET: "VEhJU0lTQVRFU1Q="
+      BCRYPT_SALT: 10
+      S3_ENABLED: false
+      S3_ID: ""
+      S3_SECRET_KEY: ""
+      S3_BASE_URL: ""
+    volumes:
+      - ./cert:/cert
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    platform: linux/x86_64
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: openidea-shopifyx
+    ports:
+      - 5432:5432
+    expose:
+      - 5432
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+volumes:
+  db:
+    driver: local
