@@ -17,7 +17,7 @@ test:
 	go test ./...
 
 create-migration:
-	migrate create -ext sql -dir db/migrate -seq todo_new_migration
+	migrate create -ext sql -dir db/migrations todo_new_migration
 
 migrate:
 	migrate -path ./db/migrations -database $(DB_CONN_URL) up
