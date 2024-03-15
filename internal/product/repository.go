@@ -101,7 +101,8 @@ func (r ProductRepo) UpdateProduct(ctx context.Context, tx *sql.Tx, product Prod
 			price = :price,
 			image_url = :image_url,
 			condition = :condition,
-			is_purchasable = :is_purchasable
+			is_purchasable = :is_purchasable,
+			updated_at = NOW()
 		WHERE
 			id = :id
 			AND deleted_at IS NULL
@@ -245,6 +246,7 @@ func (r ProductRepo) DeleteProduct(ctx context.Context, tx *sql.Tx, productID st
 		UPDATE
 			products
 		SET
+			updated_at = NOW(),
 			deleted_at = NOW()
 		WHERE
 			id = $1
@@ -253,6 +255,41 @@ func (r ProductRepo) DeleteProduct(ctx context.Context, tx *sql.Tx, productID st
 	_, err := tx.ExecContext(ctx, query, productID)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r ProductRepo) UpdateProductStock(ctx context.Context, tx *sql.Tx, productID string, updatedStock int) error {
+	query := `
+		UPDATE products
+		SET
+			stock = $1,
+		WHERE
+			id = $2
+			AND deleted_at IS NULL
+	`
+
+	var (
+		result sql.Result
+		err    error
+	)
+
+	if tx != nil {
+		result, err = tx.ExecContext(ctx, query, updatedStock, productID)
+	} else {
+		result, err = r.db.ExecContext(ctx, query, updatedStock, productID)
+	}
+	if err != nil {
+		return err
+	}
+
+	affectedRows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affectedRows != 1 {
+		return errors.New("error affected row count is not equal to 1")
 	}
 
 	return nil

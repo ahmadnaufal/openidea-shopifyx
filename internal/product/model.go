@@ -19,6 +19,10 @@ type UpdateProductRequest struct {
 	IsPurchasable bool     `json:"isPurchasable" validate:"required"`
 }
 
+type UpdateProductStockRequest struct {
+	Stock int `json:"stock" validate:"required,gte=0"`
+}
+
 type Product struct {
 	ID            string `db:"id"`
 	UserID        string `db:"user_id"`

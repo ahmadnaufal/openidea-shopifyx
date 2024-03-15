@@ -35,6 +35,7 @@ func RegisterRoute(r *fiber.App, jwtProvider jwt.JWTProvider) {
 	productGroup.Delete("/:product_id", DeleteProduct)
 	productGroup.Get("", ListProducts)
 	productGroup.Get("/:product_id", GetProduct)
+	productGroup.Post("/:product_id/stock", UpdateProductStock)
 }
 
 func CreateProduct(c *fiber.Ctx) error {
@@ -456,6 +457,93 @@ func GetProduct(c *fiber.Ctx) error {
 				Name:             productUser.Name,
 				ProductSoldTotal: 0,
 			},
+		},
+	})
+}
+
+func UpdateProductStock(c *fiber.Ctx) error {
+	productID := c.Params("product_id")
+
+	claims, err := jwt.GetLoggedInUser(c)
+	if err != nil {
+		return c.Status(fiber.StatusForbidden).JSON(model.ErrorResponse{
+			Message: err.Error(),
+			Code:    "forbidden",
+		})
+	}
+
+	var payload UpdateProductStockRequest
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResponse{
+			Message: err.Error(),
+			Code:    "invalid_request_body",
+		})
+	}
+
+	// validation for request body
+	err = validate.Struct(payload)
+	if err != nil {
+		strError := ""
+
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			for _, vErr := range validationErrors {
+				strError += fmt.Sprintf("%s;", vErr.Error())
+			}
+		} else {
+			strError = err.Error()
+		}
+
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResponse{
+			Message: strError,
+			Code:    "failed_request_body_validation",
+		})
+	}
+
+	ctx := c.Context()
+
+	product, err := ProductRepoImpl.GetProductByID(ctx, productID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return c.Status(fiber.StatusNotFound).JSON(model.ErrorResponse{
+				Message: "product not found",
+				Code:    "entity_not_found",
+			})
+		}
+
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResponse{
+			Message: "something wrong with the server. Please contact admin",
+			Code:    "internal_server_error",
+		})
+	}
+
+	// check product ownership
+	if product.UserID != claims.UserID {
+		return c.Status(fiber.StatusForbidden).JSON(model.ErrorResponse{
+			Message: "cannot update a product that is owned by another user",
+			Code:    "update_product_forbidden",
+		})
+	}
+
+	// update product stock
+	err = ProductRepoImpl.UpdateProductStock(ctx, nil, productID, payload.Stock)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResponse{
+			Message: "something wrong with the server. Please contact admin",
+			Code:    "internal_server_error",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(model.DataResponse{
+		Message: "ok",
+		Data: ProductResponse{
+			ProductID:     product.ID,
+			Name:          product.Name,
+			Price:         product.Price,
+			ImageURL:      product.ImageURL,
+			Stock:         product.Stock,
+			Condition:     product.Condition,
+			IsPurchasable: product.IsPurchasable,
+			PurchaseCount: 0,
 		},
 	})
 }
