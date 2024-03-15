@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	bankaccount "github.com/ahmadnaufal/openidea-shopifyx/internal/bank_account"
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/config"
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/product"
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/user"
@@ -40,8 +41,12 @@ func main() {
 	product.TrxProvider = &trxProvider
 	product.UserRepoImpl = &userRepo
 
+	bankAccountRepo := bankaccount.NewBankAccountRepo(db)
+	bankaccount.BankAccountRepoImpl = &bankAccountRepo
+
 	user.RegisterRoute(app)
 	product.RegisterRoute(app, jwtProvider)
+	bankaccount.RegisterRoute(app, jwtProvider)
 
 	addr := fmt.Sprintf(":%s", cfg.AppPort)
 
