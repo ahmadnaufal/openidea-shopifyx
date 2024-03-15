@@ -15,7 +15,8 @@ type DatabaseConfig struct {
 type S3Config struct {
 	ID        string `env:"S3_ID"`
 	SecretKey string `env:"S3_SECRET_KEY"`
-	BaseURL   string `env:"S3_BASE_URL"`
+	Bucket    string `env:"S3_BUCKET_NAME"`
+	Region    string `env:"S3_REGION"`
 }
 
 type Config struct {

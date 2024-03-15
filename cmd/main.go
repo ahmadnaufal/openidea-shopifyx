@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	bankaccount "github.com/ahmadnaufal/openidea-shopifyx/internal/bank_account"
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/config"
+	"github.com/ahmadnaufal/openidea-shopifyx/internal/image"
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/product"
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/user"
 	"github.com/ahmadnaufal/openidea-shopifyx/pkg/jwt"
+	"github.com/ahmadnaufal/openidea-shopifyx/pkg/s3"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -31,6 +35,13 @@ func main() {
 
 	trxProvider := config.NewTransactionProvider(db)
 
+	awsCfg, err := awsConfig.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		panic(err)
+	}
+
+	s3Provider := s3.NewS3Provider(awsCfg, cfg.S3.Bucket, cfg.S3.Region, cfg.S3.ID, cfg.S3.SecretKey)
+
 	userRepo := user.NewUserRepo(db)
 	user.UserRepoImpl = &userRepo
 	user.JwtProvider = &jwtProvider
@@ -44,9 +55,12 @@ func main() {
 	bankAccountRepo := bankaccount.NewBankAccountRepo(db)
 	bankaccount.BankAccountRepoImpl = &bankAccountRepo
 
+	image.S3ProviderImpl = &s3Provider
+
 	user.RegisterRoute(app)
 	product.RegisterRoute(app, jwtProvider)
 	bankaccount.RegisterRoute(app, jwtProvider)
+	image.RegisterRoute(app, jwtProvider)
 
 	addr := fmt.Sprintf(":%s", cfg.AppPort)
 
