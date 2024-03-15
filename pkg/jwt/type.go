@@ -17,5 +17,6 @@ func BuildJWTClaims(user JWTUser, expireDuration time.Duration) jwt.MapClaims {
 		"userId":   user.UserID,
 		"name":     user.Name,
 		"username": user.Username,
+		"exp":      jwt.NewNumericDate(time.Now().Add(3 * time.Minute)),
 	}
 }
