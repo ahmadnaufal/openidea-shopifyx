@@ -8,7 +8,7 @@ type ResponseMeta struct {
 
 type DataResponse struct {
 	Message string        `json:"message"`
-	Data    any           `json:"data"`
+	Data    any           `json:"data,omitempty"`
 	Meta    *ResponseMeta `json:"meta,omitempty"`
 }
 

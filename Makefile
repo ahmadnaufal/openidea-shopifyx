@@ -1,3 +1,5 @@
+.PHONY: all test build
+
 all: deps test build
 
 build:

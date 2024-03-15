@@ -31,6 +31,7 @@ type Product struct {
 }
 
 type ProductTag struct {
+	ID        int    `db:"id"`
 	ProductID string `db:"product_id"`
 	Tag       string `db:"tag"`
 }

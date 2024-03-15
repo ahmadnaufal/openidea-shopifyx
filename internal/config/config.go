@@ -3,11 +3,13 @@ package config
 import "github.com/joeshaw/envdecode"
 
 type DatabaseConfig struct {
-	Name     string `env:"DB_NAME"`
-	Port     string `env:"DB_PORT"`
-	Host     string `env:"DB_HOST"`
-	Username string `env:"DB_USERNAME"`
-	Password string `env:"DB_PASSWORD"`
+	Name              string `env:"DB_NAME"`
+	Port              string `env:"DB_PORT"`
+	Host              string `env:"DB_HOST"`
+	Username          string `env:"DB_USERNAME"`
+	Password          string `env:"DB_PASSWORD"`
+	MaxOpenConnection int    `env:"max_open_connection"`
+	MaxIdleConnection int    `env:"max_idle_connection"`
 }
 
 type S3Config struct {

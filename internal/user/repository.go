@@ -59,3 +59,27 @@ func (r UserRepo) GetUserByUsername(ctx context.Context, username string) (User,
 
 	return result, nil
 }
+
+func (r UserRepo) GetUserByID(ctx context.Context, id string) (User, error) {
+	var result User
+
+	query := `
+		SELECT
+			id,
+			username,
+			name,
+			password
+		FROM
+			users
+		WHERE
+			id = $1
+		LIMIT 1
+	`
+
+	err := r.db.GetContext(ctx, &result, query, id)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}

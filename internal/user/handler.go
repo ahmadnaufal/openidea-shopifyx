@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	UserRepoImpl UserRepo
-	JwtProvider  jwt.JWTProvider
+	UserRepoImpl *UserRepo
+	JwtProvider  *jwt.JWTProvider
 	SaltCost     int
 )
 
@@ -199,7 +199,7 @@ func Authenticate(c *fiber.Ctx) error {
 
 func generateAccessTokenFromUser(user User) (string, error) {
 	claims := jwt.BuildJWTClaims(jwt.JWTUser{
-		ID:       user.ID,
+		UserID:   user.ID,
 		Username: user.Username,
 		Name:     user.Name,
 	}, 3*time.Minute)
