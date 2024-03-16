@@ -437,6 +437,18 @@ func ListProducts(c *fiber.Ctx) error {
 		}
 	}
 
+	// get purchase count
+	purchaseCountMap := map[string]int{}
+	if len(productIDs) > 0 {
+		purchaseCountMap, err = ProductRepoImpl.GetPurchaseCountByProductIDs(ctx, productIDs)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResponse{
+				Message: "something wrong with the server. Please contact admin",
+				Code:    "internal_server_error",
+			})
+		}
+	}
+
 	responses := []ProductResponse{}
 	for _, product := range products {
 		productTags := productTagsMap[product.ID]
@@ -454,7 +466,7 @@ func ListProducts(c *fiber.Ctx) error {
 			Condition:     product.Condition,
 			Tags:          tags,
 			IsPurchasable: product.IsPurchasable,
-			PurchaseCount: 0,
+			PurchaseCount: purchaseCountMap[product.ID],
 		})
 	}
 
@@ -530,6 +542,23 @@ func GetProduct(c *fiber.Ctx) error {
 		})
 	}
 
+	// get purchase count
+	purchaseCountMap, err := ProductRepoImpl.GetPurchaseCountByProductIDs(ctx, []string{productID})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResponse{
+			Message: "something wrong with the server. Please contact admin",
+			Code:    "internal_server_error",
+		})
+	}
+
+	userProductPurchaseCount, err := ProductRepoImpl.GetProductPurchasedByUserID(ctx, product.UserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResponse{
+			Message: "something wrong with the server. Please contact admin",
+			Code:    "internal_server_error",
+		})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(model.DataResponse{
 		Message: "ok",
 		Data: ProductDetailResponse{
@@ -542,11 +571,11 @@ func GetProduct(c *fiber.Ctx) error {
 				Condition:     product.Condition,
 				Tags:          strTags,
 				IsPurchasable: product.IsPurchasable,
-				PurchaseCount: 0,
+				PurchaseCount: purchaseCountMap[product.ID],
 			},
 			Seller: ProductDetailSellerResponse{
 				Name:             productUser.Name,
-				ProductSoldTotal: 0,
+				ProductSoldTotal: userProductPurchaseCount,
 				BankAccounts:     bankAccountResponses,
 			},
 		},

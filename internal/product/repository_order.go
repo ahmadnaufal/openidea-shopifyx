@@ -47,3 +47,61 @@ func (r ProductRepo) CreateOrder(ctx context.Context, tx *sql.Tx, order Order) e
 
 	return nil
 }
+
+type purchaseCountResult struct {
+	ProductID     string `db:"product_id"`
+	PurchaseCount int    `db:"purchase_count"`
+}
+
+func (r ProductRepo) GetPurchaseCountByProductIDs(ctx context.Context, productIDs []string) (map[string]int, error) {
+	query := `
+		SELECT
+			product_id,
+			SUM(quantity) AS purchase_count
+		FROM
+			orders
+		WHERE
+			product_id IN (?)
+		GROUP BY
+			product_id
+	`
+
+	updatedQuery, args, err := sqlx.In(query, productIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	var purchaseCounts []purchaseCountResult
+	err = r.db.SelectContext(ctx, &purchaseCounts, sqlx.Rebind(sqlx.DOLLAR, updatedQuery), args...)
+	if err != nil {
+		return nil, err
+	}
+
+	mapRes := map[string]int{}
+	for _, v := range purchaseCounts {
+		mapRes[v.ProductID] = v.PurchaseCount
+	}
+
+	return mapRes, nil
+}
+
+func (r ProductRepo) GetProductPurchasedByUserID(ctx context.Context, userID string) (int, error) {
+	query := `
+		SELECT
+			SUM(o.quantity) AS purchase_count
+		FROM
+			orders o
+			INNER JOIN products p
+			ON p.id = o.product_id
+		WHERE
+			p.user_id = $1
+	`
+
+	var count int
+	err := r.db.GetContext(ctx, &count, query, userID)
+	if err != nil {
+		return count, err
+	}
+
+	return count, nil
+}
