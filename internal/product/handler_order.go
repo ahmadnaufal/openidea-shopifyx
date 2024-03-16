@@ -2,11 +2,10 @@ package product
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/model"
 	"github.com/ahmadnaufal/openidea-shopifyx/pkg/jwt"
-	"github.com/go-playground/validator/v10"
+	"github.com/ahmadnaufal/openidea-shopifyx/pkg/validation"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -32,20 +31,9 @@ func BuyProduct(c *fiber.Ctx) error {
 	}
 
 	// validation for request body
-	err = validate.Struct(payload)
-	if err != nil {
-		strError := ""
-
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			for _, vErr := range validationErrors {
-				strError += fmt.Sprintf("%s;", vErr.Error())
-			}
-		} else {
-			strError = err.Error()
-		}
-
+	if err := validation.Validate(payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResponse{
-			Message: strError,
+			Message: err.Error(),
 			Code:    "failed_request_body_validation",
 		})
 	}
