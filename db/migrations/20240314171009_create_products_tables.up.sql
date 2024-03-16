@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS products (
-  id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
+  id VARCHAR(64) PRIMARY KEY,
+  user_id VARCHAR(64) NOT NULL,
   name VARCHAR(62) NOT NULL,
   price INTEGER NOT NULL,
   image_url VARCHAR(255) NOT NULL,
@@ -16,7 +16,7 @@ CREATE SEQUENCE product_tags_id_seq;
 
 CREATE TABLE IF NOT EXISTS product_tags (
   id INTEGER NOT NULL DEFAULT NEXTVAL('product_tags_id_seq'),
-  product_id UUID NOT NULL,
+  product_id VARCHAR(64) NOT NULL,
   tag VARCHAR(32) NOT NULL,
   created_at TIMESTAMP(0) DEFAULT NOW()
 );

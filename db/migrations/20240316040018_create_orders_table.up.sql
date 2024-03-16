@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
-  product_id UUID NOT NULL,
-  bank_account_id UUID NOT NULL,
+  id VARCHAR(64) PRIMARY KEY,
+  user_id VARCHAR(64) NOT NULL,
+  product_id VARCHAR(64) NOT NULL,
+  bank_account_id VARCHAR(64) NOT NULL,
   payment_proof_image_url VARCHAR(128) NOT NULL,
   quantity INTEGER NOT NULL,
   created_at TIMESTAMP(0) DEFAULT NOW(),
