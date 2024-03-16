@@ -23,6 +23,7 @@ type Config struct {
 	Database          DatabaseConfig
 	AppPort           string `env:"APP_PORT"`
 	PrometheusAddress string `env:"PROMETHEUS_ADDRESS"`
+	Env               string `env:"ENV"`
 
 	// security-related options
 	JWTSecret  string `env:"JWT_SECRET"`

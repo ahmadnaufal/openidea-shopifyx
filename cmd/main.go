@@ -76,12 +76,21 @@ func main() {
 	log.Fatal(app.Listen(addr))
 }
 
-func connectToDB(dbCfg config.DatabaseConfig) *sqlx.DB {
-	dsn := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		dbCfg.Username, dbCfg.Password, dbCfg.Host,
-		dbCfg.Port, dbCfg.Name,
-	)
+func connectToDB(dbCfg config.DatabaseConfig, env string) *sqlx.DB {
+	var dsn string
+	if env == "production" {
+		dsn = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=verify-full&sslrootcert=ap-southeast-1-bundle.pem ",
+			dbCfg.Username, dbCfg.Password, dbCfg.Host,
+			dbCfg.Port, dbCfg.Name,
+		)
+	} else {
+		dsn = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+			dbCfg.Username, dbCfg.Password, dbCfg.Host,
+			dbCfg.Port, dbCfg.Name,
+		)
+	}
 
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
