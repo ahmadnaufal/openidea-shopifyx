@@ -12,6 +12,8 @@ import (
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/user"
 	"github.com/ahmadnaufal/openidea-shopifyx/pkg/jwt"
 	"github.com/ahmadnaufal/openidea-shopifyx/pkg/s3"
+
+	"github.com/ansrivas/fiberprometheus/v2"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -57,6 +59,12 @@ func main() {
 
 	image.S3ProviderImpl = &s3Provider
 
+	// setup instrumentation
+	prometheus := fiberprometheus.New("shopifyx")
+	prometheus.RegisterAt(app, "/metrics")
+	app.Use(prometheus.Middleware)
+
+	// register routes
 	user.RegisterRoute(app)
 	product.RegisterRoute(app, jwtProvider)
 	bankaccount.RegisterRoute(app, jwtProvider)

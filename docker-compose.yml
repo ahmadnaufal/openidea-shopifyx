@@ -17,8 +17,6 @@ services:
       S3_ID: ""
       S3_SECRET_KEY: ""
       S3_BASE_URL: ""
-    volumes:
-      - ./cert:/cert
     depends_on:
       db:
         condition: service_healthy
@@ -41,6 +39,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
 volumes:
   db:
     driver: local
+  prometheus-data:
