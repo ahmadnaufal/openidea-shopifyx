@@ -15,9 +15,9 @@ var (
 
 func RegisterRoute(r *fiber.App, jwtProvider jwt.JWTProvider) {
 	imageGroup := r.Group("/v1/image")
-	imageGroup.Use(jwtProvider.Middleware())
 
-	imageGroup.Post("", UploadImage)
+	authMiddleware := jwtProvider.Middleware()
+	imageGroup.Post("", authMiddleware, UploadImage)
 }
 
 func UploadImage(c *fiber.Ctx) error {

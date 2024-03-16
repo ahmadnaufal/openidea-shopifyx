@@ -32,6 +32,21 @@ func (p *JWTProvider) GenerateToken(payload jwt.MapClaims) (string, error) {
 	return token, nil
 }
 
+func (p *JWTProvider) MiddlewareWithPublic() fiber.Handler {
+	return jwtware.New(jwtware.Config{
+		ContextKey: "user",
+		Claims:     jwt.MapClaims{},
+		SigningKey: jwtware.SigningKey{
+			JWTAlg: jwtware.HS256,
+			Key:    p.privateKey,
+		},
+		Filter: func(c *fiber.Ctx) bool {
+			// only filter if there's userOnly
+			return !c.QueryBool("userOnly", false)
+		},
+	})
+}
+
 func (p *JWTProvider) Middleware() fiber.Handler {
 	return jwtware.New(jwtware.Config{
 		ContextKey: "user",

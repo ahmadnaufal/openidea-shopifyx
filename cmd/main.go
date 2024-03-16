@@ -56,6 +56,7 @@ func main() {
 
 	bankAccountRepo := bankaccount.NewBankAccountRepo(db)
 	bankaccount.BankAccountRepoImpl = &bankAccountRepo
+	product.BankAccountRepoImpl = &bankAccountRepo
 
 	image.S3ProviderImpl = &s3Provider
 

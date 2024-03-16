@@ -3,6 +3,8 @@ package product
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -264,7 +266,7 @@ func (r ProductRepo) UpdateProductStock(ctx context.Context, tx *sql.Tx, product
 	query := `
 		UPDATE products
 		SET
-			stock = $1,
+			stock = $1
 		WHERE
 			id = $2
 			AND deleted_at IS NULL
@@ -293,4 +295,139 @@ func (r ProductRepo) UpdateProductStock(ctx context.Context, tx *sql.Tx, product
 	}
 
 	return nil
+}
+
+func (r ProductRepo) ListProducts(ctx context.Context, req ListProductsRequest) ([]Product, int, error) {
+	var products []Product
+
+	baseQuery := `
+		SELECT DISTINCT
+			p.id AS id,
+			p.user_id,
+			p.name,
+			p.price,
+			p.image_url,
+			p.stock,
+			p.condition,
+			p.is_purchasable,
+			p.created_at
+		FROM
+			products p
+			INNER JOIN product_tags pt
+			ON p.id = pt.product_id
+		WHERE
+			p.deleted_at IS NULL %s
+	`
+
+	args := []interface{}{}
+
+	filterQuery, filterArgs := getFilter(req)
+
+	args = append(args, filterArgs...)
+
+	queryWithFilter := fmt.Sprintf(baseQuery, filterQuery)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS temp", queryWithFilter)
+
+	var count int
+	err := r.db.GetContext(ctx, &count, sqlx.Rebind(sqlx.DOLLAR, countQuery), args...)
+	if err != nil {
+		return products, count, err
+	}
+
+	orderQuery := getSortBy(req)
+	limitQuery, limitArgs := getLimitAndOffset(req)
+	args = append(args, limitArgs...)
+
+	query := fmt.Sprintf("%s %s %s", queryWithFilter, orderQuery, limitQuery)
+
+	err = r.db.SelectContext(ctx, &products, sqlx.Rebind(sqlx.DOLLAR, query), args...)
+	if err != nil {
+		return products, count, err
+	}
+
+	return products, count, nil
+}
+
+func getFilter(req ListProductsRequest) (string, []interface{}) {
+	args := []interface{}{}
+	filter := ""
+
+	if req.UserOnly {
+		filter += " AND p.user_id = ?"
+		args = append(args, req.UserID)
+	}
+
+	// tags, bit complex
+	if len(req.Tags) > 0 {
+		placeholders := []string{}
+		for _, tag := range req.Tags {
+			args = append(args, tag)
+			placeholders = append(placeholders, "?")
+		}
+		filter += fmt.Sprintf(" AND pt.tag IN (%s)", strings.Join(placeholders, ", "))
+	}
+
+	if req.Condition != "" {
+		filter += " AND p.condition = ?"
+		args = append(args, req.Condition)
+	}
+
+	if !req.ShowEmptyStock {
+		filter += " AND p.stock > 0"
+	}
+
+	if req.MaxPrice > 0 {
+		filter += " AND p.price <= ?"
+		args = append(args, req.MaxPrice)
+	}
+
+	if req.MinPrice > 0 {
+		filter += " AND p.price >= ?"
+		args = append(args, req.MinPrice)
+	}
+
+	if req.Search != "" {
+		filter += " AND p.name ILIKE '%' || ? || '%'"
+		args = append(args, req.Search)
+	}
+
+	return filter, args
+}
+
+func getSortBy(req ListProductsRequest) string {
+	sortColumn := strings.ToLower(req.SortBy)
+	if sortColumn != "price" && sortColumn != "created_at" {
+		sortColumn = "created_at"
+	}
+
+	sortOrdering := strings.ToUpper(req.OrderBy)
+	if sortOrdering != "ASC" && sortOrdering != "DESC" {
+		sortOrdering = "DESC"
+	}
+
+	query := fmt.Sprintf(`
+		ORDER BY
+			p.%s %s 
+	`, sortColumn, sortOrdering)
+
+	return query
+}
+
+func getLimitAndOffset(req ListProductsRequest) (string, []interface{}) {
+	// by default, set limit to 50
+	query := "LIMIT ? OFFSET ?"
+
+	limit := req.Limit
+	if limit <= 0 {
+		limit = 10
+	}
+
+	offset := req.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
+	args := []interface{}{limit, offset}
+
+	return query, args
 }

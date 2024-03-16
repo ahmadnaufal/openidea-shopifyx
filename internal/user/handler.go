@@ -94,7 +94,7 @@ func RegisterUser(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(model.DataResponse{
+	return c.Status(fiber.StatusCreated).JSON(model.DataResponse{
 		Message: "User registered successfully",
 		Data: UserAuthResponse{
 			Username:    user.Username,

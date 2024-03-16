@@ -29,3 +29,11 @@ type BankAccountResponse struct {
 	BankAccountName   string `json:"bankAccountName"`
 	BankAccountNumber string `json:"bankAccountNumber"`
 }
+
+type OrderResponse struct {
+	ID                   string `json:"id"`
+	ProductID            string `json:"productId"`
+	BankAccountID        string `json:"bankAccountId"`
+	PaymentProofImageURL string `json:"paymentProofImageUrl"`
+	Quantity             int    `json:"quantity"`
+}
