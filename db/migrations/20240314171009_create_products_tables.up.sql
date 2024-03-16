@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS products (
   price INTEGER NOT NULL,
   image_url VARCHAR(255) NOT NULL,
   stock INTEGER NOT NULL DEFAULT 0,
-  condition VARCHAR(16) NOT NULL DEFAULT 'used',
+  condition VARCHAR(16) NOT NULL DEFAULT 'second',
   is_purchasable BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMP(0) DEFAULT NOW(),
   updated_at TIMESTAMP(0) DEFAULT NOW(),
