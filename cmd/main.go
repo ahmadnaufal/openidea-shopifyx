@@ -11,6 +11,7 @@ import (
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/product"
 	"github.com/ahmadnaufal/openidea-shopifyx/internal/user"
 	"github.com/ahmadnaufal/openidea-shopifyx/pkg/jwt"
+	"github.com/ahmadnaufal/openidea-shopifyx/pkg/middleware"
 	"github.com/ahmadnaufal/openidea-shopifyx/pkg/s3"
 
 	"github.com/ansrivas/fiberprometheus/v2"
@@ -30,6 +31,8 @@ func main() {
 	app.Use(logger.New())
 	app.Use(recover.New())
 	app.Use(compress.New())
+	// custom middleware to set all method not allowed response to not found
+	app.Use(middleware.CustomMiddleware404())
 
 	jwtProvider := jwt.NewJWTProvider(cfg.JWTSecret)
 

@@ -32,3 +32,6 @@ build
 cmd/__debug_bin
 
 env.sh
+env.prod.sh
+
+*.pem

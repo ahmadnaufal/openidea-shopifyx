@@ -24,11 +24,12 @@ func init() {
 func RegisterRoute(r *fiber.App, jwtProvider jwt.JWTProvider) {
 	bankAccountGroup := r.Group("/v1/bank/account")
 	authMiddleware := jwtProvider.Middleware()
+	bankAccountGroup.Use(authMiddleware)
 
-	bankAccountGroup.Post("", authMiddleware, CreateBankAccount)
-	bankAccountGroup.Get("", authMiddleware, ListBankAccounts)
-	bankAccountGroup.Patch("/:bank_account_id", authMiddleware, UpdateBankAccount)
-	bankAccountGroup.Delete("/:bank_account_id", authMiddleware, DeleteBankAccount)
+	bankAccountGroup.Post("/", CreateBankAccount)
+	bankAccountGroup.Get("/", ListBankAccounts)
+	bankAccountGroup.Patch("/:bank_account_id", UpdateBankAccount)
+	bankAccountGroup.Delete("/:bank_account_id", DeleteBankAccount)
 }
 
 func CreateBankAccount(c *fiber.Ctx) error {
